@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace ApiTests
 {
-    public class UserTests
+    public class UserTests : WorkWithFiles
     {
         private static readonly HttpClient client = new HttpClient();
 
@@ -24,13 +24,6 @@ namespace ApiTests
             Assert.IsTrue(result.IsSuccess, "API call was not successful");
 
             SaveIdsToFile(gender, result.IdList);
-        }
-
-        private void SaveIdsToFile(string gender, List<int> idList)
-        {
-            var fileName = $"{gender}_ids.txt";
-            File.WriteAllText(fileName, JsonConvert.SerializeObject(idList));
-            Console.WriteLine($"Saved IDs for {gender} to {fileName}");
         }
 
         [TestCase("any")]
@@ -54,14 +47,6 @@ namespace ApiTests
             {
                 Assert.Fail($"Errors encountered:\n{string.Join("\n", errorMessages)}");
             }
-        }
-
-        private List<int> ReadIdsFromFile(string gender)
-        {
-            var fileName = $"{gender}_ids.txt";
-            var json = File.ReadAllText(fileName);
-            var idList = JsonConvert.DeserializeObject<List<int>>(json);
-            return idList;
         }
 
         private async Task<string> TestUserDetail(int id, string expectedGender)
@@ -91,6 +76,10 @@ namespace ApiTests
                 if (id != result.User.Id)
                 {
                     return $"Returned ID {result.User.Id} does not match the requested ID.";
+                }
+                if (result.User == null)
+                {
+                    return $"User with ID {id} was not found.";
                 }
 
                 if (expectedGender != "any" && expectedGender != result.User.Gender)
